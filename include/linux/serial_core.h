@@ -13,6 +13,7 @@
 #include <linux/interrupt.h>
 #include <linux/circ_buf.h>
 #include <linux/spinlock.h>
+#include <linux/rwsem.h>
 #include <linux/sched.h>
 #include <linux/tty.h>
 #include <linux/mutex.h>
@@ -24,6 +25,10 @@
 	((port)->cons && (port)->cons->index == (port)->line)
 #else
 #define uart_console(port)      ({ (void)port; 0; })
+#endif
+
+#ifdef CONFIG_FPGA_PERIPHERAL
+#include <linux/notifier.h>
 #endif
 
 struct uart_port;
@@ -469,6 +474,23 @@ struct uart_port {
 	unsigned char		regshift;		/* reg offset shift */
 	unsigned char		iotype;			/* io access style */
 	unsigned char		quirks;			/* internal quirks */
+
+#ifdef CONFIG_FPGA_PERIPHERAL
+	struct notifier_block	nb;
+	unsigned int		fpga_state;
+#define FPGA_UP			(0)
+#define FPGA_DOWN		(1)
+#define FPGA_FAILED		(2)
+
+	/*
+	 * Functions which need to access the UART should acquire a
+	 * read lock on this. The FPGA will not get reprogrammed unless this
+	 * lock is released. The FPGA reprogramming will acquire an
+	 * exclusive lock (write lock) on this, thereby preventing the said
+	 * functions from accessing the UART in the FPGA
+	 */
+	struct rw_semaphore	fpga_lock;
+#endif
 
 #define UPIO_UNKNOWN		((unsigned char)~0U)	/* UCHAR_MAX */
 #define UPIO_PORT		(SERIAL_IO_PORT)	/* 8b I/O port access */
