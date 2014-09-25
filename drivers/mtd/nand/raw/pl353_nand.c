@@ -28,7 +28,7 @@
 #include <linux/pl353-smc.h>
 #include <linux/clk.h>
 
-#define PL353_NAND_DRIVER_NAME "pl353-nand"
+#define PL353_NAND_DRIVER_NAME "xilinx_nand"
 
 /* NAND flash driver defines */
 #define PL353_NAND_ECC_SIZE	512	/* Size of data for ECC operation */
