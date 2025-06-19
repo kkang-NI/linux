@@ -13,6 +13,7 @@
 #include <linux/hrtimer.h>
 #include <linux/kref.h>
 #include <linux/workqueue.h>
+#include <linux/wait.h>
 
 #include <linux/atomic.h>
 #include <asm/ptrace.h>
