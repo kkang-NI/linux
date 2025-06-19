@@ -245,6 +245,8 @@ static int of_platform_serial_setup(struct platform_device *ofdev,
 	}
 
 	return 0;
+err_dispose:
+	irq_dispose_mapping(port->irq);
 err_unprepare:
 	clk_disable_unprepare(info->clk);
 err_pmruntime:
