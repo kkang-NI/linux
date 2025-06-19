@@ -1,0 +1,172 @@
+/include/ "zynq-7000.dtsi"
+
+/ {
+	model = "NI Zynq-based Target";
+	compatible = "ni,zynq", "xlnx,zynq-7000";
+
+	/* Populated by the bootloader */
+	memory@0 {
+		device_type = "memory";
+		reg = <0 0>;
+	};
+	chosen { };
+
+	usb_phy0: phy0 {
+		compatible = "usb-nop-xceiv";
+		#phy-cells = <0>;
+	};
+
+	usb_phy1: phy1 {
+		compatible = "usb-nop-xceiv";
+		#phy-cells = <0>;
+	};
+
+	amba: axi {
+		ni_uart0: serial@80000000 {
+			device_type = "serial";
+			compatible = "ni,ni16550";
+			status = "disabled";
+			reg = <0x80000000 0x8>;
+			interrupts = <0 30 4>;
+			clock-frequency = <58824000>;
+			/* Populated by the bootloader */
+			/* current-speed = <0>; */
+		};
+
+		ni_uart1: serial@80000010 {
+			device_type = "serial";
+			compatible = "ni,ni16550";
+			status = "disabled";
+			reg = <0x80000010 0x8>;
+			interrupts = <0 31 4>;
+			clock-frequency = <58824000>;
+		};
+
+		ni_uart2: serial@80000020 {
+			device_type = "serial";
+			compatible = "ni,ni16550";
+			status = "disabled";
+			reg = <0x80000020 0x8>;
+			interrupts = <0 32 4>;
+			clock-frequency = <58824000>;
+		};
+
+		ni_uart3: serial@80000030 {
+			device_type = "serial";
+			compatible = "ni,ni16550";
+			status = "disabled";
+			reg = <0x80000030 0x8>;
+			interrupts = <0 33 0>;
+			clock-frequency = <58824000>;
+		};
+
+		ni_uart4: serial@80000040 {
+			device_type = "serial";
+			compatible = "ni,ni16550";
+			status = "disabled";
+			reg = <0x80000040 0x8>;
+			interrupts = <0 34 0>;
+			clock-frequency = <58824000>;
+		};
+
+		ni_uart5: serial@80000050 {
+			device_type = "serial";
+			compatible = "ni,ni16550";
+			status = "disabled";
+			reg = <0x80000050 0x8>;
+			interrupts = <0 35 0>;
+			clock-frequency = <58824000>;
+		};
+
+		ni_uart6: serial@80000060 {
+			device_type = "serial";
+			compatible = "ni,ni16550";
+			status = "disabled";
+			reg = <0x80000060 0x8>;
+			interrupts = <0 36 0>;
+			clock-frequency = <58824000>;
+		};
+
+		ni_uart7: serial@80000070 {
+			device_type = "serial";
+			compatible = "ni,ni16550";
+			status = "disabled";
+			reg = <0x80000070 0x8>;
+			interrupts = <0 52 0>;
+			clock-frequency = <58824000>;
+		};
+
+		ni_uart8: serial@80000080 {
+			device_type = "serial";
+			compatible = "ni,ni16550";
+			status = "disabled";
+			reg = <0x80000080 0x8>;
+			interrupts = <0 53 0>;
+			clock-frequency = <58824000>;
+		};
+
+		i2c2: i2c@81000000 {
+			compatible = "xlnx,xps-iic-2.00.a";
+			status = "disabled";
+			reg = <0x81000000 0x1000>;
+			interrupts = <0 33 4>;
+			bus-id = <2>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+		};
+	};
+};
+
+&i2c0 {
+	status = "okay";
+
+	nicpld@40 {
+		compatible = "ni,cpld";
+		reg = <0x40>;
+	};
+
+	ds3231_rtc@68 {
+		compatible = "ds3232";
+		status = "disabled";
+		reg = <0x68>;
+	};
+};
+
+&usb0 {
+	usb-phy = <&usb_phy0>;
+};
+
+&usb1 {
+	usb-phy = <&usb_phy1>;
+};
+
+&smcc {
+	status = "okay";
+	/*
+	 * NI Zynq based devices require different memclk frequency
+	 * for different timing modes
+	 */
+	memclk-timing-frequency = <0 83333333>,
+				<1 166666666>,
+				<2 166666666>,
+				<3 166666666>,
+				<4 166666666>,
+				<5 166666666>;
+};
+
+&nfc0 {
+	status = "okay";
+
+	nand@0 {
+		reg = <0>;
+		nand-on-flash-bbt;
+		nand-ecc-mode = "on-die";
+	};
+};
+
+&L2 {
+	prefetch-data = <1>;
+	prefetch-instr = <1>;
+	arm,dynamic-clock-gating = <0>;
+	arm,standby-mode = <0>;
+};
