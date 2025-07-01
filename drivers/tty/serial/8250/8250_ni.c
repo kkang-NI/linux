@@ -468,6 +468,22 @@ static struct platform_driver ni16550_driver = {
 
 module_platform_driver(ni16550_driver);
 
+#ifdef CONFIG_SERIAL_8250_CONSOLE
+static int __init early_ni8250_setup(struct earlycon_device *device,
+					const char *options)
+{
+	if (!device->port.membase)
+		return -ENODEV;
+
+	device->port.iotype = UPIO_MEM32;
+	device->port.regshift = 2;
+
+	return early_serial8250_setup(device, NULL);
+}
+
+OF_EARLYCON_DECLARE(ni8250, "ni,ni16550", early_ni8250_setup);
+#endif
+
 MODULE_AUTHOR("Emerson Electric Co.");
 MODULE_DESCRIPTION("NI 16550 Driver");
 MODULE_LICENSE("GPL");

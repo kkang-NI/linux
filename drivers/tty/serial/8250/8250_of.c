@@ -219,6 +219,27 @@ static int of_platform_serial_probe(struct platform_device *ofdev)
 	if (info == NULL)
 		return -ENOMEM;
 
+#ifdef CONFIG_SERIAL_8250_NI
+	if (port_type == PORT_NI16550_F16 || port_type == PORT_NI16550_F128) {
+		struct device_node *np = ofdev->dev.of_node;
+		const char *transceiver;
+		struct uart_8250_port port8250;
+		memset(&port8250, 0, sizeof(port8250));
+
+		if (of_property_read_string(np, "transceiver", &transceiver)) {
+			dev_warn(&ofdev->dev, "no transceiver property set\n");
+			return -ENODEV;
+		}
+		if (strcmp(transceiver, "RS-232") == 0) {
+			ret = serial8250_register_8250_port(&port8250);
+		} else {
+			dev_warn(&ofdev->dev,
+				 "unsupported transceiver property (%s)\n",
+				 transceiver);
+			return -EINVAL;
+		}
+	}
+#else
 	memset(&port8250, 0, sizeof(port8250));
 	ret = of_platform_serial_setup(ofdev, port_type, &port8250, info);
 	if (ret)
@@ -242,6 +263,7 @@ static int of_platform_serial_probe(struct platform_device *ofdev)
 		port8250.overrun_backoff_time_ms = 0;
 
 	ret = serial8250_register_8250_port(&port8250);
+#endif
 	if (ret < 0)
 		goto err_dispose;
 
@@ -265,7 +287,13 @@ err_free:
 static int of_platform_serial_remove(struct platform_device *ofdev)
 {
 	struct of_serial_info *info = platform_get_drvdata(ofdev);
-
+#ifdef CONFIG_SERIAL_8250_NI
+	struct device_node *np = ofdev->dev.of_node;
+	const char *transceiver;
+	if (of_property_read_string(np, "transceiver", &transceiver)) {
+		dev_warn(&ofdev->dev, "no transceiver property set\n");
+	}
+#endif
 	serial8250_unregister_port(info->line);
 
 	reset_control_assert(info->rst);
@@ -335,6 +363,10 @@ static const struct of_device_id of_platform_serial_table[] = {
 		.data = (void *)PORT_MTK_BTIF, },
 	{ .compatible = "mrvl,mmp-uart",
 		.data = (void *)PORT_XSCALE, },
+	{ .compatible = "ni16550-fifo16",
+		.data = (void *)PORT_NI16550_F16, },
+	{ .compatible = "ni16550-fifo128",
+		.data = (void *)PORT_NI16550_F128, },
 	{ .compatible = "ti,da830-uart", .data = (void *)PORT_DA830, },
 	{ .compatible = "nuvoton,wpcm450-uart", .data = (void *)PORT_NPCM, },
 	{ .compatible = "nuvoton,npcm750-uart", .data = (void *)PORT_NPCM, },

@@ -24,6 +24,10 @@
 #define UNKNOWN_DEV 0x3000
 #define CIR_PORT	0x0800
 
+#define NI_16BYTE_FIFO	0x0004
+#define NI_CLK_33333333	0x0002
+#define NI_CAP_PMR	0x0001
+
 static const struct pnp_device_id pnp_dev_table[] = {
 	/* Archtek America Corp. */
 	/* Archtek SmartLink Modem 3334BT Plug & Play */
@@ -193,6 +197,9 @@ static const struct pnp_device_id pnp_dev_table[] = {
 	{	"MVX00A1",		0	},
 	/* PC Rider K56 Phone System PnP */
 	{	"MVX00F2",		0	},
+	/* National Instruments (NI) 16550 PNP */
+	{	"NIC7750",	NI_CLK_33333333			},
+	{	"NIC7772",	NI_CAP_PMR | NI_16BYTE_FIFO	},
 	/* NEC 98NOTE SPEAKER PHONE FAX MODEM(33600bps) */
 	{	"nEC8241",		0	},
 	/* Pace 56 Voice Internal Plug & Play Modem */
@@ -475,7 +482,36 @@ serial_pnp_probe(struct pnp_dev *dev, const struct pnp_device_id *dev_id)
 	device_property_read_u32(&dev->dev, "clock-frequency", &uart.port.uartclk);
 	uart.port.dev = &dev->dev;
 
+#ifdef CONFIG_SERIAL_8250_NI
+	if (is_niport(dev)) {
+		if (flags & NI_CLK_33333333)
+			uart.port.uartclk = 33333333;
+		uart.port.flags |= UPF_FIXED_PORT | UPF_FIXED_TYPE;
+
+		if (flags & NI_16BYTE_FIFO)
+			uart.port.type = PORT_NI16550_F16;
+		else
+			uart.port.type = PORT_NI16550_F128;
+
+		/*
+		 * NI UARTs are by default connected to RS-485 transceivers,
+		 * unless the PMR register is implemented, and the UART is
+		 * dual-mode capable. Then it could be in RS-232 mode and if it
+		 * is, we will register as a standard 8250 port.
+		 */
+		if ((flags & NI_CAP_PMR) && is_rs232_mode(uart.port.iobase)) {
+			pr_info("NI 16550 at I/O 0x%x (irq = %d) is dual-mode capable and is in RS-232 mode\n",
+					 (unsigned int)uart.port.iobase,
+					 uart.port.irq);
+			line = serial8250_register_8250_port(&uart);
+		} else
+			/* Either the PMR register is not implemented, or it is
+			 * and the UART is in RS-485 mode as set in the PMR */
+			line = ni16550_register_port(&uart);
+	}
+#endif
 	line = serial8250_register_8250_port(&uart);
+
 	if (line < 0 || (flags & CIR_PORT))
 		return -ENODEV;
 
