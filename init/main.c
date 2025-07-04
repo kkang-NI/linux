@@ -877,6 +877,20 @@ void start_kernel(void)
 {
 	char *command_line;
 	char *after_dashes;
+	
+	struct gpio_desc	*desc;
+
+	pr_info("Toggling GPIO 78...\n");
+	desc = gpio_to_desc(78);
+
+	if (!desc) {
+        	pr_err("Failed to get GPIO 78\n");
+	} else {
+		gpiod_direction_output(desc, 1);  // set high
+		mdelay(100);
+		// gpiod_set_value(desc, 0);         // set low
+		pr_info("GPIO 78 toggled successfully\n");
+	}
 
 	set_task_stack_end_magic(&init_task);
 	smp_setup_processor_id();
