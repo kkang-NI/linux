@@ -45,6 +45,8 @@ static struct mtd_info *allocate_partition(struct mtd_info *parent,
 	char *name;
 	u64 tmp;
 
+	printk(KERN_NOTICE "kkang: start of allocate_partition func.\n");
+
 	/* allocate the partition structure */
 	child = kzalloc(sizeof(*child), GFP_KERNEL);
 	name = kstrdup(part->name, GFP_KERNEL);
@@ -86,6 +88,8 @@ static struct mtd_info *allocate_partition(struct mtd_info *parent,
 	child->part.offset = part->offset;
 	INIT_LIST_HEAD(&child->partitions);
 
+	printk(KERN_NOTICE "kkang: allocate_partition func: here 1.\n");
+
 	if (child->part.offset == MTDPART_OFS_APPEND)
 		child->part.offset = cur_offset;
 	if (child->part.offset == MTDPART_OFS_NXTBLK) {
@@ -100,6 +104,7 @@ static struct mtd_info *allocate_partition(struct mtd_info *parent,
 			       child->part.offset);
 		}
 	}
+	printk(KERN_NOTICE "kkang: allocate_partition func: here 2.\n");
 	if (child->part.offset == MTDPART_OFS_RETAIN) {
 		child->part.offset = cur_offset;
 		if (parent_size - child->part.offset >= child->part.size) {
@@ -113,12 +118,15 @@ static struct mtd_info *allocate_partition(struct mtd_info *parent,
 			goto out_register;
 		}
 	}
+	printk(KERN_NOTICE "kkang: allocate_partition func: here 3.\n");
 	if (child->part.size == MTDPART_SIZ_FULL)
 		child->part.size = parent_size - child->part.offset;
 
 	printk(KERN_NOTICE "0x%012llx-0x%012llx : \"%s\"\n",
 	       child->part.offset, child->part.offset + child->part.size,
 	       child->name);
+
+	printk(KERN_NOTICE "kkang: allocate_partition func: here 4.\n");
 
 	/* let's do some sanity checks */
 	if (child->part.offset >= parent_size) {
@@ -207,6 +215,8 @@ static struct mtd_info *allocate_partition(struct mtd_info *parent,
 			offs += child->erasesize;
 		}
 	}
+
+	printk(KERN_NOTICE "kkang: end of allocate_partition func.\n");
 
 out_register:
 	return child;
@@ -649,10 +659,12 @@ int parse_mtd_partitions(struct mtd_info *master, const char *const *types,
 	struct mtd_part_parser *parser;
 	int ret, err = 0;
 
+	printk(KERN_NOTICE "kkang: start of parse_mtd_partition func.\n");
 	if (!types)
 		types = mtd_is_partition(master) ? default_subpartition_types :
 			default_mtd_part_types;
 
+	printk(KERN_NOTICE "kkang: parse_mtd_partition: here 1.\n");
 	for ( ; *types; types++) {
 		/*
 		 * ofpart is a special type that means OF partitioning info
@@ -664,10 +676,14 @@ int parse_mtd_partitions(struct mtd_info *master, const char *const *types,
 		} else {
 			pr_debug("%s: parsing partitions %s\n", master->name,
 				 *types);
+			printk(KERN_NOTICE "%s: parsing partitions %s\n", master->name,
+				 *types);
 			parser = mtd_part_parser_get(*types);
 			if (!parser && !request_module("%s", *types))
 				parser = mtd_part_parser_get(*types);
 			pr_debug("%s: got parser %s\n", master->name,
+				parser ? parser->name : NULL);
+			printk(KERN_NOTICE "%s: got parser %s\n", master->name,
 				parser ? parser->name : NULL);
 			if (!parser)
 				continue;
@@ -675,8 +691,10 @@ int parse_mtd_partitions(struct mtd_info *master, const char *const *types,
 			if (ret <= 0)
 				mtd_part_parser_put(parser);
 		}
+		printk(KERN_NOTICE "kkang: parse_mtd_partition: here 2.\n");
 		/* Found partitions! */
 		if (ret > 0) {
+			printk(KERN_NOTICE "kkang: parse_mtd_partition: going to add_mtd_partitions..\n");
 			err = add_mtd_partitions(master, pparts.parts,
 						 pparts.nr_parts);
 			mtd_part_parser_cleanup(&pparts);
@@ -686,9 +704,11 @@ int parse_mtd_partitions(struct mtd_info *master, const char *const *types,
 		 * Stash the first error we see; only report it if no parser
 		 * succeeds
 		 */
+		printk(KERN_NOTICE "kkang: parse_mtd_partition: here 3.\n");
 		if (ret < 0 && !err)
 			err = ret;
 	}
+	printk(KERN_NOTICE "kkang: end of parse_mtd_partitions func.\n");
 	return err;
 }
 
