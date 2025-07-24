@@ -143,21 +143,18 @@
 			reg = <0xf8007000 0x100>;
 		};
 
-		smcc@e000e000 {
+		smcc: memory-controller@e000e000 {
 			#address-cells = <1>;
 			#size-cells = <1>;
-			arm,addr25 = <0x0>;
-			arm,nor-chip-sel0 = <0x0>;
-			arm,nor-chip-sel1 = <0x0>;
-			arm,sram-chip-sel0 = <0x0>;
-			arm,sram-chip-sel1 = <0x0>;
-			clock-names = "memclk", "aclk";
-			clocks = <&clkc 11>, <&clkc 44>;
 			compatible = "arm,pl353-smc-r2p1";
-			interrupts = <0 18 4>;
-			ranges ;
 			reg = <0xe000e000 0x1000>;
-			nand@e1000000 {
+			clock-names = "memclk", "aclk","apb_pclk";
+			clocks = <&clkc 11>, <&clkc 44>;
+			ranges = <0x0 0x0 0xe1000000 0x1000000 /* Nand CS region */
+				0x1 0x0 0xe2000000 0x2000000 /* SRAM/NOR CS0 region */
+				0x2 0x0 0xe4000000 0x2000000>; /* SRAM/NOR CS1 region */
+			interrupts = <0 18 4>;
+			nand: nand-controller@e1000000 {
 				compatible = "arm,pl353-nand-r2p1";
 				reg = <0xe1000000 0x1000000>;
 				bank-width = <1>; /* 8-bit width */
