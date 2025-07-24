@@ -942,6 +942,8 @@ static int pl353_nand_ecc_init(struct mtd_info *mtd, struct nand_ecc_ctrl *ecc,
 	struct pl353_nand_controller *xnfc = to_pl353_nand(chip);
 	int ret = 0;
 
+	pr_info("kkang: start of pl353_nand_ecc_init func.");
+
 	ecc->read_oob = pl353_nand_read_oob;
 	ecc->write_oob = pl353_nand_write_oob;
 	ecc->write_page_raw = pl353_nand_write_page_raw;
@@ -950,6 +952,8 @@ static int pl353_nand_ecc_init(struct mtd_info *mtd, struct nand_ecc_ctrl *ecc,
 	if (ecc_engine_type == NAND_ECC_ENGINE_TYPE_ON_DIE) {
 		ecc->write_page = pl353_nand_write_page_raw;
 		ecc->read_page = pl353_nand_read_page_raw;
+
+		pr_info("kkang: pl353_nand_ecc_init: ecc_engine_type == NAND_ECC_ENGINE_TYPE_ON_DIE.");
 
 		/*
 		 * On-Die ECC spare bytes offset 8 is used for ECC codes
@@ -963,6 +967,8 @@ static int pl353_nand_ecc_init(struct mtd_info *mtd, struct nand_ecc_ctrl *ecc,
 
 	} else {
 		ecc->engine_type = NAND_ECC_ENGINE_TYPE_ON_HOST;
+
+		pr_info("kkang: pl353_nand_ecc_init: ecc_engine_type == NAND_ECC_ENGINE_TYPE_ON_HOST.");
 
 		/* Hardware ECC generates 3 bytes ECC code for each 512 bytes */
 		ecc->bytes = 3;
@@ -996,6 +1002,8 @@ static int pl353_nand_ecc_init(struct mtd_info *mtd, struct nand_ecc_ctrl *ecc,
 			ret = -ENXIO;
 		}
 	}
+
+	pr_info("kkang: end of pl353_nand_ecc_init func.");
 
 	return ret;
 }
@@ -1054,6 +1062,8 @@ static int pl353_nand_attach_chip(struct nand_chip *chip)
 	struct pl353_nand_controller *xnfc = to_pl353_nand(chip);
 	int ret;
 
+	pr_info("kkang: start of pl353_nand_attach_chip func.");
+
 	if (chip->options & NAND_BUSWIDTH_16) {
 		ret = pl353_smc_set_buswidth(PL353_SMC_MEM_WIDTH_16);
 		if (ret) {
@@ -1071,6 +1081,8 @@ static int pl353_nand_attach_chip(struct nand_chip *chip)
 		xnfc->addr_cycles += 3;
 	else
 		xnfc->addr_cycles += 2;
+
+	pr_info("kkang: pl353_nand_attach_chip: here 1.");
 
 	ret = pl353_nand_ecc_init(mtd, &chip->ecc, chip->ecc.engine_type);
 	if (ret) {
@@ -1097,6 +1109,7 @@ static int pl353_nand_attach_chip(struct nand_chip *chip)
 		}
 	}
 
+	pr_info("kkang: end of pl353_nand_attach_chip func.");
 	return 0;
 }
 

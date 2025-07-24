@@ -1169,19 +1169,25 @@ static struct mtd_info * __init open_mtd_device(const char *mtd_dev)
 	int mtd_num;
 	char *endp;
 
+	pr_info("kkang: start of open_mtd_device");
+
 	mtd_num = simple_strtoul(mtd_dev, &endp, 0);
+
+	pr_info("kkang: open_mtd_device: mtd_num = %d", mtd_num);
 	if (*endp != '\0' || mtd_dev == endp) {
 		/*
 		 * This does not look like an ASCII integer, probably this is
 		 * MTD device name.
 		 */
 		mtd = get_mtd_device_nm(mtd_dev);
-		if (PTR_ERR(mtd) == -ENODEV)
+		if (PTR_ERR(mtd) == -ENODEV) {
+			pr_info("kkang: open_mtd_device: PTR_ERR(mtd) == -ENODEV");
 			/* Probably this is an MTD character device node path */
 			mtd = open_mtd_by_chdev(mtd_dev);
+		}
 	} else
 		mtd = get_mtd_device(NULL, mtd_num);
-
+	pr_info("kkang: end of open_mtd_device");
 	return mtd;
 }
 
@@ -1227,6 +1233,8 @@ static int __init ubi_init(void)
 	for (i = 0; i < mtd_devs; i++) {
 		struct mtd_dev_param *p = &mtd_dev_param[i];
 		struct mtd_info *mtd;
+
+		pr_info("kkang: ubi_init: %s", i);
 
 		cond_resched();
 

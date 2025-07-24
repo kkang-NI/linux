@@ -98,12 +98,14 @@ static void __iomem *pl353_smc_base;
  */
 int pl353_smc_set_buswidth(unsigned int bw)
 {
+	pr_info("kkang: start of pl353_smc_set_buswidth func.");
 	if (bw != PL353_SMC_MEM_WIDTH_8  && bw != PL353_SMC_MEM_WIDTH_16)
 		return -EINVAL;
 
 	writel(bw, pl353_smc_base + PL353_SMC_SET_OPMODE_OFFS);
 	writel(PL353_SMC_DC_UPT_NAND_REGS, pl353_smc_base +
 	       PL353_SMC_DIRECT_CMD_OFFS);
+	pr_info("kkang: end of pl353_smc_set_buswidth func.");
 
 	return 0;
 }
@@ -311,11 +313,14 @@ static void pl353_smc_init_nand_interface(struct amba_device *adev,
 {
 	unsigned long timeout;
 
+	pr_info("kkang: start of pl353_smc_init_nand_interface func.");
+
 	pl353_smc_set_buswidth(PL353_SMC_MEM_WIDTH_8);
 	writel(PL353_SMC_CFG_CLR_INT_CLR_1,
 	       pl353_smc_base + PL353_SMC_CFG_CLR_OFFS);
 	writel(PL353_SMC_DC_UPT_NAND_REGS, pl353_smc_base +
 	       PL353_SMC_DIRECT_CMD_OFFS);
+	pr_info("kkang: pl353_smc_init_nand_interface: here 1.");
 
 	timeout = jiffies + PL353_NAND_ECC_BUSY_TIMEOUT;
 	/* Wait till the ECC operation is complete */
@@ -329,10 +334,14 @@ static void pl353_smc_init_nand_interface(struct amba_device *adev,
 	if (time_after_eq(jiffies, timeout))
 		return;
 
+	pr_info("kkang: pl353_smc_init_nand_interface: here 2.");
+
 	writel(PL353_NAND_ECC_CMD1,
 	       pl353_smc_base + PL353_SMC_ECC_MEMCMD1_OFFS);
 	writel(PL353_NAND_ECC_CMD2,
 	       pl353_smc_base + PL353_SMC_ECC_MEMCMD2_OFFS);
+
+	pr_info("kkang: end of pl353_smc_init_nand_interface func.");
 }
 
 static const struct of_device_id pl353_smc_supported_children[] = {

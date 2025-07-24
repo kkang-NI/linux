@@ -949,6 +949,10 @@ struct mtd_info *get_mtd_device(struct mtd_info *mtd, int num)
 	struct mtd_info *ret = NULL, *other;
 	int err = -ENODEV;
 
+	pr_info("kkang: start of get_mtd_device func");
+	if(!mtd)
+		pr_info("kkang: get_mtd_device: mtd is NULL");
+
 	mutex_lock(&mtd_table_mutex);
 
 	if (num == -1) {
@@ -974,6 +978,7 @@ struct mtd_info *get_mtd_device(struct mtd_info *mtd, int num)
 		ret = ERR_PTR(err);
 out:
 	mutex_unlock(&mtd_table_mutex);
+	pr_info("kkang: end of get_mtd_device func");
 	return ret;
 }
 EXPORT_SYMBOL_GPL(get_mtd_device);
@@ -983,6 +988,8 @@ int __get_mtd_device(struct mtd_info *mtd)
 {
 	struct mtd_info *master = mtd_get_master(mtd);
 	int err;
+
+	pr_info("kkang: start of __get_mtd_device func");
 
 	if (!try_module_get(master->owner))
 		return -ENODEV;
@@ -1003,6 +1010,8 @@ int __get_mtd_device(struct mtd_info *mtd)
 		mtd = mtd->parent;
 	}
 
+	pr_info("kkang: end of __get_mtd_device func");
+
 	return 0;
 }
 EXPORT_SYMBOL_GPL(__get_mtd_device);
@@ -1019,6 +1028,8 @@ struct mtd_info *get_mtd_device_nm(const char *name)
 {
 	int err = -ENODEV;
 	struct mtd_info *mtd = NULL, *other;
+
+	pr_info("kkang: start of get_mtd_device_nm func");
 
 	mutex_lock(&mtd_table_mutex);
 
@@ -1041,6 +1052,7 @@ struct mtd_info *get_mtd_device_nm(const char *name)
 
 out_unlock:
 	mutex_unlock(&mtd_table_mutex);
+	pr_info("kkang: end of get_mtd_device_nm func");
 	return ERR_PTR(err);
 }
 EXPORT_SYMBOL_GPL(get_mtd_device_nm);
