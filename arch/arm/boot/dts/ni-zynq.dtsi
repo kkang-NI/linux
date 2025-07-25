@@ -128,18 +128,18 @@
 
 &smcc {
 	status = "okay";
-};
-
-&nand0 {
-	status = "okay";
 	arm,addr25 = <0x0>;
 	arm,nor-chip-sel0 = <0x0>;
 	arm,nor-chip-sel1 = <0x0>;
 	arm,sram-chip-sel0 = <0x0>;
 	arm,sram-chip-sel1 = <0x0>;
+};
+
+&nand0 {
+	status = "okay";
 
 	nand@0 {
-		reg = <0>;
+		reg = <0 0 0x1000000>;
 		nand-on-flash-bbt;
 		nand-ecc-mode = "on-die";
 		bank-width = <1>; /* 8-bit width */
