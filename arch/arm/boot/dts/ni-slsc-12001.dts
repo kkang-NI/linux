@@ -464,7 +464,8 @@
 
 		/* No fpga_clk specified because we want our FPGA clock
 		 * (fclk0) to always be 125 MHz. The bootloader sets
-		 * fclk0 to 125 MHz and we just leave it like that. */
+		 * fclk0 to 125 MHz and we just leave it like that.
+		 */
 
 		phy-handle = <&phy0>;
 		phy-mode = "rgmii-id";
@@ -472,18 +473,18 @@
 		#size-cells = <0x0>;
 
 		emio-speed-gpios = <0>,
-						   <&gpio 54 0>;
+				   <&gpio 54 0>;
 
 		phy0: phy@0 {
-				compatible = "micrel,KSZ9031";
-				device_type = "ethernet-phy";
-				reg = <0x0>;
-				/* Interrupt on GPIO1. */
-				interrupts = <1 8 /* IRQ_TYPE_LEVEL_LOW */>;
-				interrupt-parent = <&gpio>;
+			compatible = "micrel,KSZ9031","ethernet-phy-ieee802.3-c22";
+			device_type = "ethernet-phy";
+			reg = <0x0>;
+			/* Interrupt on GPIO1. */
+			interrupts = <1 8 /* IRQ_TYPE_LEVEL_LOW */>;
+			interrupt-parent = <&gpio>;
 
-				/* Set RX_CLK Pad Skew [4:0] to 0b00000. */
-				rxc-skew-ps = <0>;
+			/* Set RX_CLK Pad Skew [4:0] to 0b00000. */
+			rxc-skew-ps = <0>;
 		};
 };
 
@@ -503,7 +504,5 @@
 
 &clkc {
 		/* Enable fclk0 for eth0 and eth1, fclk1 for serial. */
-		/* I got the ps-clk-frequency value from zynq-zed.dts */
-		ps-clk-frequency = <33333333>;
 		fclk-enable = <0x3>;
 };

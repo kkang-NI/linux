@@ -513,8 +513,11 @@ static int macb_mii_probe(struct net_device *dev)
 	np = bp->pdev->dev.of_node;
 	ret = 0;
 
+	dev_info(&bp->pdev->dev, "kkang: macb_mii_probe(): np = %d.\n", np);
+
 	if (np) {
 		if (of_phy_is_fixed_link(np)) {
+			dev_info(&bp->pdev->dev, "kkang: macb_mii_probe(): of_phy_is_fixed_link(np) is true. \n");
 			if (of_phy_register_fixed_link(np) < 0) {
 				dev_err(&bp->pdev->dev,
 					"broken fixed-link specification\n");
@@ -522,12 +525,14 @@ static int macb_mii_probe(struct net_device *dev)
 			}
 			bp->phy_node = of_node_get(np);
 		} else {
+			dev_info(&bp->pdev->dev, "kkang: macb_mii_probe(): of_phy_is_fixed_link(np) is false. \n");
 			bp->phy_node = of_parse_phandle(np, "phy-handle", 0);
 			/* fallback to standard phy registration if no
 			 * phy-handle was found nor any phy found during
 			 * dt phy registration
 			 */
 			if (!bp->phy_node && !phy_find_first(bp->mii_bus)) {
+				dev_info(&bp->pdev->dev, "kkang: macb_mii_probe(): loop of PHY_MAX_ADDR = %d. \n", PHY_MAX_ADDR);
 				for (i = 0; i < PHY_MAX_ADDR; i++) {
 					struct phy_device *phydev;
 
@@ -538,7 +543,7 @@ static int macb_mii_probe(struct net_device *dev)
 						break;
 					}
 				}
-
+				dev_info(&bp->pdev->dev, "kkang: macb_mii_probe(): mdiobus_scan's ret = %d. \n", ret);
 				if (ret)
 					return -ENODEV;
 			}
@@ -546,18 +551,26 @@ static int macb_mii_probe(struct net_device *dev)
 	}
 
 	if (bp->phy_node) {
+		dev_info(&bp->pdev->dev, "kkang: macb_mii_probe():  PHY node path: %pOF\n", bp->phy_node);
+		dev_info(&bp->pdev->dev, "kkang: macb_mii_probe(): bp->phy_node->name = %s. \n", bp->phy_node->name);
+		dev_info(&bp->pdev->dev, "kkang: macb_mii_probe(): bp->phy_interface = %d. \n", bp->phy_interface);
 		phydev = of_phy_connect(dev, bp->phy_node,
 					&macb_handle_link_change, 0,
 					bp->phy_interface);
-		if (!phydev)
+		dev_info(&bp->pdev->dev, "kkang: macb_mii_probe(): phydev 01 = %d. \n", phydev);
+		if (!phydev) {
+			dev_err(&bp->pdev->dev, "MACB: of_phy_connect() failed!\n");
 			return -ENODEV;
+		}
 	} else {
 		phydev = phy_find_first(bp->mii_bus);
+		dev_info(&bp->pdev->dev, "kkang: macb_mii_probe(): phydev 02 = %d. \n", phydev);
 		if (!phydev) {
 			netdev_err(dev, "no PHY found\n");
 			return -ENXIO;
 		}
 
+		dev_info(&bp->pdev->dev, "kkang: macb_mii_probe(): pdata = %d. \n", pdata);
 		if (pdata) {
 			if (gpio_is_valid(pdata->phy_irq_pin)) {
 				ret = devm_gpio_request(&bp->pdev->dev,
@@ -579,6 +592,7 @@ static int macb_mii_probe(struct net_device *dev)
 			return ret;
 		}
 	}
+	dev_info(&bp->pdev->dev, "kkang: macb_mii_probe(): MACB: PHY connected successfully: phydev=%p\n", phydev);
 
 	/* mask with MAC supported features */
 	if (macb_is_gem(bp) && bp->caps & MACB_CAPS_GIGABIT_MODE_AVAILABLE)
@@ -3630,6 +3644,8 @@ static int macb_probe(struct platform_device *pdev)
 	struct macb *bp;
 	int err;
 
+	dev_info(&pdev->dev, "kkang: begin of macb_probe()\n");
+
 	regs = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	mem = devm_ioremap_resource(&pdev->dev, regs);
 	if (IS_ERR(mem))
@@ -3658,7 +3674,7 @@ static int macb_probe(struct platform_device *pdev)
 		err = -ENOMEM;
 		goto err_disable_clocks;
 	}
-
+	dev_info(&pdev->dev, "kkang: macb_probe(): after macb_probe_queues()\n");
 	dev->base_addr = regs->start;
 
 	SET_NETDEV_DEV(dev, &pdev->dev);
@@ -3690,6 +3706,7 @@ static int macb_probe(struct platform_device *pdev)
 	if (of_get_property(np, "magic-packet", NULL))
 		bp->wol |= MACB_WOL_HAS_MAGIC_PACKET;
 	device_init_wakeup(&pdev->dev, bp->wol & MACB_WOL_HAS_MAGIC_PACKET);
+	dev_info(&pdev->dev, "kkang: macb_probe(): after device_init_wakeup().\n");
 
 	spin_lock_init(&bp->lock);
 
@@ -3705,6 +3722,7 @@ static int macb_probe(struct platform_device *pdev)
 	platform_set_drvdata(pdev, dev);
 
 	dev->irq = platform_get_irq(pdev, 0);
+	dev_info(&pdev->dev, "kkang: macb_probe(): after platform_get_irq(). dev->irq = %d. \n", dev->irq);
 	if (dev->irq < 0) {
 		err = dev->irq;
 		goto err_out_free_netdev;
@@ -3725,6 +3743,7 @@ static int macb_probe(struct platform_device *pdev)
 
 	/* Power up the PHY if there is a GPIO reset */
 	phy_node =  of_get_next_available_child(np, NULL);
+	dev_info(&pdev->dev, "kkang: macb_probe(): after of_get_next_available_child(). phy_node = %d. \n", phy_node);
 	if (phy_node) {
 		int gpio = of_get_named_gpio(phy_node, "reset-gpios", 0);
 
@@ -3745,19 +3764,23 @@ static int macb_probe(struct platform_device *pdev)
 	} else {
 		bp->phy_interface = err;
 	}
+	dev_info(&pdev->dev, "kkang: macb_probe(): after of_get_phy_mode(np). err = %d. \n", err);
 
 	/* IP specific init */
 	err = init(pdev);
+	dev_info(&pdev->dev, "kkang: macb_probe(): after init. err = %d. \n", err);
 	if (err)
 		goto err_out_free_netdev;
 
 	err = macb_mii_init(bp);
+	dev_info(&pdev->dev, "kkang: macb_probe(): after macb_mii_init. err = %d. \n", err);
 	if (err)
 		goto err_out_free_netdev;
 
 	phydev = dev->phydev;
 
 	netif_carrier_off(dev);
+	dev_info(&pdev->dev, "kkang: macb_probe(): after netif_carrier_off.\n");
 
 	/* Look for a GPIO to indicate link speed to the PL as 10/100 (high)
 	* or 1000 (low).
@@ -3823,7 +3846,7 @@ static int macb_probe(struct platform_device *pdev)
 	if (err)
 		dev_err(&pdev->dev, "failed to init netdev polling\n");
 #endif
-
+	dev_info(&pdev->dev, "kkang: end of macb_probe().\n");
 	netdev_info(dev, "Cadence %s rev 0x%08x at 0x%08lx irq %d (%pM)\n",
 		    macb_is_gem(bp) ? "GEM" : "MACB", macb_readl(bp, MID),
 		    dev->base_addr, dev->irq, dev->dev_addr);
@@ -3831,6 +3854,7 @@ static int macb_probe(struct platform_device *pdev)
 	return 0;
 
 err_out_unregister_mdio:
+	dev_info(&pdev->dev, "kkang: macb_probe(): err_out_unregister_mdio.\n");
 	phy_disconnect(dev->phydev);
 	mdiobus_unregister(bp->mii_bus);
 	mdiobus_free(bp->mii_bus);
@@ -3840,9 +3864,11 @@ err_out_unregister_mdio:
 		gpiod_set_value(bp->reset_gpio, 0);
 
 err_out_free_netdev:
+	dev_info(&pdev->dev, "kkang: macb_probe(): err_out_free_netdev.\n");
 	free_netdev(dev);
 
 err_disable_clocks:
+	dev_info(&pdev->dev, "kkang: macb_probe(): err_disable_clocks.\n");
 	clk_disable_unprepare(tx_clk);
 	clk_disable_unprepare(hclk);
 	clk_disable_unprepare(pclk);
