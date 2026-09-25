@@ -22,53 +22,53 @@
 		spi11 = &spiController11;
 		spi12 = &spiController12;
 	};
+};
 
-	amba@0 {
+&gpio0 {
+		/* You can specify GPIO settings here:
+		 *
+		 *  gpioN-label      String label.
+		 *  gpioN-direction  "input" or "output".
+		 *  gpioN-settings   "output" - specifies the GPIO state as "high"
+		 *                              or "low".
+		 *                   "input"  - specifies GPIO interrupt settings as
+		 *                              "none", "level-low", "level-high",
+		 *                              "edge-falling", "edge-rising", or
+		 *                              "edge-both".
+		 */
 
-		gpio: gpio@e000a000 {
-			/* You can specify GPIO settings here:
-			 *
-			 *  gpioN-label      String label.
-			 *  gpioN-direction  "input" or "output".
-			 *  gpioN-settings   "output" - specifies the GPIO state as "high"
-			 *                              or "low".
-			 *                   "input"  - specifies GPIO interrupt settings as
-			 *                              "none", "level-low", "level-high",
-			 *                              "edge-falling", "edge-rising", or
-			 *                              "edge-both".
-			 */
+		/* GPIO1 (MIO1) */
+		gpio1-label     = "eth0_phy_interrupt";
+		gpio1-direction = "input";
+		gpio1-settings  = "level-low";
 
-			/* GPIO1 (MIO1) */
-			gpio1-label     = "eth0_phy_interrupt";
-			gpio1-direction = "input";
-			gpio1-settings  = "level-low";
+		/* GPIO15 (MIO15) */
+		gpio15-label     = "wdt_interrupt";
+		gpio15-direction = "input";
+		gpio15-settings  = "edge-falling";
 
-			/* GPIO15 (MIO15) */
-			gpio15-label     = "wdt_interrupt";
-			gpio15-direction = "input";
-			gpio15-settings  = "edge-falling";
+		/* GPIO54 (EMIO0) */
+		gpio54-label     = "eth0_link_speed";
+		gpio54-direction = "output";
+		gpio54-settings  = "low";
 
-			/* GPIO54 (EMIO0) */
-			gpio54-label     = "eth0_link_speed";
-			gpio54-direction = "output";
-			gpio54-settings  = "low";
+		/* GPIO55 (EMIO1) */
+		gpio55-label     = "eth1_link_speed_1000";
+		gpio55-direction = "output";
+		gpio55-settings  = "low";
 
-			/* GPIO55 (EMIO1) */
-			gpio55-label     = "eth1_link_speed_1000";
-			gpio55-direction = "output";
-			gpio55-settings  = "low";
+		/* GPIO56 (EMIO2) */
+		gpio56-label     = "eth1_link_speed_100";
+		gpio56-direction = "output";
+		gpio56-settings  = "low";
 
-			/* GPIO56 (EMIO2) */
-			gpio56-label     = "eth1_link_speed_100";
-			gpio56-direction = "output";
-			gpio56-settings  = "low";
+		/* GPIO57 (EMIO3) */
+		gpio57-label     = "eth1_phy_interrupt";
+		gpio57-direction = "input";
+		gpio57-settings  = "level-low";
+	};
 
-			/* GPIO57 (EMIO3) */
-			gpio57-label     = "eth1_phy_interrupt";
-			gpio57-direction = "input";
-			gpio57-settings  = "level-low";
-		};
-
+	&amba {
 		spiController1: spi@0x80001000 {
 			compatible = "cdns,spi-r1p6";
 			status = "okay";
@@ -453,11 +453,7 @@
 		   reg = <0x80000000 0x30000>;
 		   interrupts = <0 29 4>;
 		};
-
 	};
-
-
-};
 
 &watchdog0 {
 		reset-on-timeout;
@@ -477,15 +473,15 @@
 		#size-cells = <0x0>;
 
 		emio-speed-gpios = <0>,
-						   <&gpio 54 0>;
+						   <&gpio0 54 0>;
 
 		phy0: phy@0 {
-				compatible = "micrel,KSZ9031";
+				compatible = "micrel,KSZ9031","ethernet-phy-ieee802.3-c22";
 				device_type = "ethernet-phy";
 				reg = <0x0>;
 				/* Interrupt on GPIO1. */
 				interrupts = <1 8 /* IRQ_TYPE_LEVEL_LOW */>;
-				interrupt-parent = <&gpio>;
+				interrupt-parent = <&gpio0>;
 
 				/* Set RX_CLK Pad Skew [4:0] to 0b00000. */
 				rxc-skew-ps = <0>;
@@ -497,7 +493,7 @@
 	nicpld@40 {
 		watchdogs {
 			boot-watchdog {
-				interrupt-parent = <&gpio>;
+				interrupt-parent = <&gpio0>;
 				interrupts = <15 2 /* IRQ_TYPE_EDGE_FALLING */>;
 			};
 		};
@@ -554,3 +550,4 @@
 		/* Enable fclk0 for eth0 and eth1, fclk1 for serial. */
 		fclk-enable = <0x3>;
 };
+
