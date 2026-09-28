@@ -80,16 +80,20 @@
 			#size-cells = <0>;
 
 
-			m25p80@0 {
-				#address-cells = <1>;
-				#size-cells = <1>;
-				compatible = "m25p80","jedec,spi-nor";
+			flash@0 {
+				compatible = "jedec,spi-nor";
 				reg = <0>;
 				spi-max-frequency = <1000000>;
 
-				partition@0 {
-					label = "slsc_slot1";
-					reg = <0x0 0x100000>;
+				partitions {
+					compatible = "fixed-partitions";
+					#address-cells = <1>;
+					#size-cells = <1>;
+
+					partition@0 {
+						label = "slsc_slot1";
+						reg = <0x0 0x100000>;
+					};
 				};
 			};
 
@@ -112,16 +116,20 @@
 			#address-cells = <1>;
 			#size-cells = <0>;
 
-			m25p80@0 {
-				#address-cells = <1>;
-				#size-cells = <1>;
-				compatible = "m25p80","jedec,spi-nor";
+			flash@0 {
+				compatible = "jedec,spi-nor";
 				reg = <0>;
 				spi-max-frequency = <1000000>;
 
-				partition@0 {
-					label = "slsc_slot2";
-					reg = <0x0 0x100000>;
+				partitions {
+					compatible = "fixed-partitions";
+					#address-cells = <1>;
+					#size-cells = <1>;
+
+					partition@0 {
+						label = "slsc_slot2";
+						reg = <0x0 0x100000>;
+					};
 				};
 			};
 
@@ -144,16 +152,20 @@
 			#address-cells = <1>;
 			#size-cells = <0>;
 
-			m25p80@0 {
-				#address-cells = <1>;
-				#size-cells = <1>;
-				compatible = "m25p80","jedec,spi-nor";
+			flash@0 {
+				compatible = "jedec,spi-nor";
 				reg = <0>;
 				spi-max-frequency = <1000000>;
 
-				partition@0 {
-					label = "slsc_slot3";
-					reg = <0x0 0x100000>;
+				partitions {
+					compatible = "fixed-partitions";
+					#address-cells = <1>;
+					#size-cells = <1>;
+
+					partition@0 {
+						label = "slsc_slot3";
+						reg = <0x0 0x100000>;
+					};
 				};
 			};
 
@@ -176,16 +188,20 @@
 			#address-cells = <1>;
 			#size-cells = <0>;
 
-			m25p80@0 {
-				#address-cells = <1>;
-				#size-cells = <1>;
-				compatible = "m25p80","jedec,spi-nor";
+			flash@0 {
+				compatible = "jedec,spi-nor";
 				reg = <0>;
 				spi-max-frequency = <1000000>;
 
-				partition@0 {
-					label = "slsc_slot4";
-					reg = <0x0 0x100000>;
+				partitions {
+					compatible = "fixed-partitions";
+					#address-cells = <1>;
+					#size-cells = <1>;
+
+					partition@0 {
+						label = "slsc_slot4";
+						reg = <0x0 0x100000>;
+					};
 				};
 			};
 
@@ -208,16 +224,20 @@
 			#address-cells = <1>;
 			#size-cells = <0>;
 
-			m25p80@0 {
-				#address-cells = <1>;
-				#size-cells = <1>;
-				compatible = "m25p80","jedec,spi-nor";
+			flash@0 {
+				compatible = "jedec,spi-nor";
 				reg = <0>;
 				spi-max-frequency = <1000000>;
 
-				partition@0 {
-					label = "slsc_slot5";
-					reg = <0x0 0x100000>;
+				partitions {
+					compatible = "fixed-partitions";
+					#address-cells = <1>;
+					#size-cells = <1>;
+
+					partition@0 {
+						label = "slsc_slot5";
+						reg = <0x0 0x100000>;
+					};
 				};
 			};
 
@@ -239,16 +259,20 @@
 			#address-cells = <1>;
 			#size-cells = <0>;
 
-			m25p80@0 {
-				#address-cells = <1>;
-				#size-cells = <1>;
-				compatible = "m25p80","jedec,spi-nor";
+			flash@0 {
+				compatible = "jedec,spi-nor";
 				reg = <0>;
 				spi-max-frequency = <1000000>;
 
-				partition@0 {
-					label = "slsc_slot6";
-					reg = <0x0 0x100000>;
+				partitions {
+					compatible = "fixed-partitions";
+					#address-cells = <1>;
+					#size-cells = <1>;
+
+					partition@0 {
+						label = "slsc_slot6";
+						reg = <0x0 0x100000>;
+					};
 				};
 			};
 
@@ -270,16 +294,20 @@
 			#address-cells = <1>;
 			#size-cells = <0>;
 
-			m25p80@0 {
-				#address-cells = <1>;
-				#size-cells = <1>;
-				compatible = "m25p80","jedec,spi-nor";
+			flash@0 {
+				compatible = "jedec,spi-nor";
 				reg = <0>;
 				spi-max-frequency = <1000000>;
 
-				partition@0 {
-					label = "slsc_slot7";
-					reg = <0x0 0x100000>;
+				partitions {
+					compatible = "fixed-partitions";
+					#address-cells = <1>;
+					#size-cells = <1>;
+
+					partition@0 {
+						label = "slsc_slot7";
+						reg = <0x0 0x100000>;
+					};
 				};
 			};
 
@@ -301,16 +329,20 @@
 			#address-cells = <1>;
 			#size-cells = <0>;
 
-			m25p80@0 {
-				#address-cells = <1>;
-				#size-cells = <1>;
-				compatible = "m25p80","jedec,spi-nor";
+			flash@0 {
+				compatible = "jedec,spi-nor";
 				reg = <0>;
 				spi-max-frequency = <1000000>;
 
-				partition@0 {
-					label = "slsc_slot8";
-					reg = <0x0 0x100000>;
+				partitions {
+					compatible = "fixed-partitions";
+					#address-cells = <1>;
+					#size-cells = <1>;
+
+					partition@0 {
+						label = "slsc_slot8";
+						reg = <0x0 0x100000>;
+					};
 				};
 			};
 
@@ -332,16 +364,20 @@
 			#address-cells = <1>;
 			#size-cells = <0>;
 
-			m25p80@0 {
-				#address-cells = <1>;
-				#size-cells = <1>;
-				compatible = "m25p80","jedec,spi-nor";
+			flash@0 {
+				compatible = "jedec,spi-nor";
 				reg = <0>;
 				spi-max-frequency = <1000000>;
 
-				partition@0 {
-					label = "slsc_slot9";
-					reg = <0x0 0x100000>;
+				partitions {
+					compatible = "fixed-partitions";
+					#address-cells = <1>;
+					#size-cells = <1>;
+
+					partition@0 {
+						label = "slsc_slot9";
+						reg = <0x0 0x100000>;
+					};
 				};
 			};
 
@@ -363,16 +399,20 @@
 			#address-cells = <1>;
 			#size-cells = <0>;
 
-			m25p80@0 {
-				#address-cells = <1>;
-				#size-cells = <1>;
-				compatible = "m25p80","jedec,spi-nor";
+			flash@0 {
+				compatible = "jedec,spi-nor";
 				reg = <0>;
 				spi-max-frequency = <1000000>;
 
-				partition@0 {
-					label = "slsc_slot10";
-					reg = <0x0 0x100000>;
+				partitions {
+					compatible = "fixed-partitions";
+					#address-cells = <1>;
+					#size-cells = <1>;
+
+					partition@0 {
+						label = "slsc_slot10";
+						reg = <0x0 0x100000>;
+					};
 				};
 			};
 
@@ -395,16 +435,20 @@
 			#address-cells = <1>;
 			#size-cells = <0>;
 
-			m25p80@0 {
-				#address-cells = <1>;
-				#size-cells = <1>;
-				compatible = "m25p80","jedec,spi-nor";
+			flash@0 {
+				compatible = "jedec,spi-nor";
 				reg = <0>;
 				spi-max-frequency = <1000000>;
 
-				partition@0 {
-					label = "slsc_slot11";
-					reg = <0x0 0x100000>;
+				partitions {
+					compatible = "fixed-partitions";
+					#address-cells = <1>;
+					#size-cells = <1>;
+
+					partition@0 {
+						label = "slsc_slot11";
+						reg = <0x0 0x100000>;
+					};
 				};
 			};
 
@@ -427,16 +471,20 @@
 			#address-cells = <1>;
 			#size-cells = <0>;
 
-			m25p80@0 {
-				#address-cells = <1>;
-				#size-cells = <1>;
-				compatible = "m25p80","jedec,spi-nor";
+			flash@0 {
+				compatible = "jedec,spi-nor";
 				reg = <0>;
 				spi-max-frequency = <1000000>;
 
-				partition@0 {
-					label = "slsc_slot12";
-					reg = <0x0 0x100000>;
+				partitions {
+					compatible = "fixed-partitions";
+					#address-cells = <1>;
+					#size-cells = <1>;
+
+					partition@0 {
+						label = "slsc_slot12";
+						reg = <0x0 0x100000>;
+					};
 				};
 			};
 
