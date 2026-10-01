@@ -586,7 +586,7 @@
 
 &ni_uart0 {
 		status = "okay";
-		transceiver = "RS-232";
+		ni,serial-port-mode = "RS-232";
 };
 
 &usb1 {
