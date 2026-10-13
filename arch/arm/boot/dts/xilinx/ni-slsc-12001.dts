@@ -171,7 +171,7 @@
 
 
 			spidev@1 {
-				compatible = "ni,slsc-module";
+				compatible = "spidev";
 				spi-max-frequency = <1000000>;
 				reg = <1>;
 			};
