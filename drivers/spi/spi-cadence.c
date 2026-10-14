@@ -7,7 +7,6 @@
  * based on Blackfin On-Chip SPI Driver (spi_bfin5xx.c)
  */
 
-#include <linux/atomic.h>
 #include <linux/clk.h>
 #include <linux/delay.h>
 #include <linux/gpio/consumer.h>
@@ -25,35 +24,6 @@
 
 /* Name of this driver */
 #define CDNS_SPI_NAME		"cdns-spi"
-
-static bool debug_reg_io;
-module_param(debug_reg_io, bool, 0644);
-MODULE_PARM_DESC(debug_reg_io, "Log numbered Cadence SPI register accesses");
-
-static unsigned int debug_reg_io_limit = 10000;
-module_param(debug_reg_io_limit, uint, 0644);
-MODULE_PARM_DESC(debug_reg_io_limit, "Maximum number of Cadence SPI register accesses to log");
-
-static atomic64_t debug_reg_io_sequence = ATOMIC64_INIT(0);
-
-static bool debug_flow = true;
-module_param(debug_flow, bool, 0644);
-MODULE_PARM_DESC(debug_flow, "Log numbered Cadence SPI control-flow events");
-
-static unsigned int debug_flow_limit = 10000;
-module_param(debug_flow_limit, uint, 0644);
-MODULE_PARM_DESC(debug_flow_limit, "Maximum number of Cadence SPI control-flow events to log");
-
-static atomic64_t debug_flow_sequence = ATOMIC64_INIT(0);
-
-#define cdns_spi_flow(xspi, format, ...) do { \
-	if (debug_flow) { \
-		s64 sequence = atomic64_inc_return(&debug_flow_sequence); \
-		if (sequence <= debug_flow_limit) \
-			pr_info("cdns-spi flow[%lld] %p " format, sequence, xspi, \
-				##__VA_ARGS__); \
-	} \
-} while (0)
 
 /* Register offset definitions */
 #define CDNS_SPI_CR	0x00 /* Configuration  Register, RW */
@@ -173,31 +143,11 @@ enum cdns_spi_frame_n_bytes {
 /* Macros for the SPI controller read/write */
 static inline u32 cdns_spi_read(struct cdns_spi *xspi, u32 offset)
 {
-	u32 value = readl_relaxed(xspi->regs + offset);
-	s64 sequence;
-
-	if (!debug_reg_io)
-		return value;
-
-	sequence = atomic64_inc_return(&debug_reg_io_sequence);
-	if (sequence <= debug_reg_io_limit)
-		pr_info("cdns-spi reg[%lld] %p R 0x%02x = 0x%08x\n",
-			sequence, xspi, offset, value);
-
-	return value;
+	return readl_relaxed(xspi->regs + offset);
 }
 
 static inline void cdns_spi_write(struct cdns_spi *xspi, u32 offset, u32 val)
 {
-	s64 sequence;
-
-	if (debug_reg_io) {
-		sequence = atomic64_inc_return(&debug_reg_io_sequence);
-		if (sequence <= debug_reg_io_limit)
-			pr_info("cdns-spi reg[%lld] %p W 0x%02x = 0x%08x\n",
-				sequence, xspi, offset, val);
-	}
-
 	writel_relaxed(val, xspi->regs + offset);
 }
 
@@ -217,8 +167,6 @@ static void cdns_spi_init_hw(struct cdns_spi *xspi, bool is_target)
 {
 	u32 ctrl_reg = 0;
 
-	cdns_spi_flow(xspi, "init_hw enter target=%u\n", is_target);
-
 	if (!is_target)
 		ctrl_reg |= CDNS_SPI_CR_DEFAULT;
 
@@ -235,7 +183,6 @@ static void cdns_spi_init_hw(struct cdns_spi *xspi, bool is_target)
 	cdns_spi_write(xspi, CDNS_SPI_ISR, CDNS_SPI_IXR_ALL);
 	cdns_spi_write(xspi, CDNS_SPI_CR, ctrl_reg);
 	cdns_spi_write(xspi, CDNS_SPI_ER, CDNS_SPI_ER_ENABLE);
-	cdns_spi_flow(xspi, "init_hw exit cr=0x%08x\n", ctrl_reg);
 }
 
 /**
@@ -249,8 +196,6 @@ static void cdns_spi_chipselect(struct spi_device *spi, bool is_high)
 	u32 ctrl_reg;
 
 	ctrl_reg = cdns_spi_read(xspi, CDNS_SPI_CR);
-	cdns_spi_flow(xspi, "chipselect cs=%u is_high=%u cr_before=0x%08x\n",
-		      spi_get_chipselect(spi, 0), is_high, ctrl_reg);
 
 	if (is_high) {
 		/* Deselect the target */
@@ -268,7 +213,6 @@ static void cdns_spi_chipselect(struct spi_device *spi, bool is_high)
 	}
 
 	cdns_spi_write(xspi, CDNS_SPI_CR, ctrl_reg);
-	cdns_spi_flow(xspi, "chipselect cr_after=0x%08x\n", ctrl_reg);
 }
 
 /**
@@ -505,8 +449,6 @@ static irqreturn_t cdns_spi_irq(int irq, void *dev_id)
 
 	status = IRQ_NONE;
 	intr_status = cdns_spi_read(xspi, CDNS_SPI_ISR);
-	cdns_spi_flow(xspi, "irq enter irq=%d isr=0x%08x tx=%d rx=%d\n",
-		      irq, intr_status, xspi->tx_bytes, xspi->rx_bytes);
 	cdns_spi_write(xspi, CDNS_SPI_ISR, intr_status);
 
 	if (intr_status & CDNS_SPI_IXR_MODF) {
@@ -515,8 +457,6 @@ static irqreturn_t cdns_spi_irq(int irq, void *dev_id)
 		 * transferred is non-zero
 		 */
 		cdns_spi_write(xspi, CDNS_SPI_IDR, CDNS_SPI_IXR_DEFAULT);
-		cdns_spi_flow(xspi, "irq mode_fault finalize tx=%d rx=%d\n",
-			      xspi->tx_bytes, xspi->rx_bytes);
 		spi_finalize_current_transfer(ctlr);
 		status = IRQ_HANDLED;
 	} else if (intr_status & CDNS_SPI_IXR_TXOW) {
@@ -526,10 +466,6 @@ static irqreturn_t cdns_spi_irq(int irq, void *dev_id)
 		if (threshold > 1)
 			trans_cnt -= threshold;
 
-		cdns_spi_flow(xspi,
-			      "irq txow threshold=%d trans_cnt=%d tx=%d rx=%d\n",
-			      threshold, trans_cnt, xspi->tx_bytes, xspi->rx_bytes);
-
 		/* Set threshold to one if number of pending are
 		 * less than half fifo
 		 */
@@ -538,8 +474,6 @@ static irqreturn_t cdns_spi_irq(int irq, void *dev_id)
 
 		if (xspi->tx_bytes) {
 			cdns_spi_process_fifo(ctlr, xspi, trans_cnt, trans_cnt);
-			cdns_spi_flow(xspi, "irq refill complete tx=%d rx=%d\n",
-				      xspi->tx_bytes, xspi->rx_bytes);
 		} else {
 			/* Fixed delay due to controller limitation with
 			 * RX_NEMPTY incorrect status
@@ -549,8 +483,6 @@ static irqreturn_t cdns_spi_irq(int irq, void *dev_id)
 			cdns_spi_process_fifo(ctlr, xspi, 0, trans_cnt);
 			cdns_spi_write(xspi, CDNS_SPI_IDR,
 				       CDNS_SPI_IXR_DEFAULT);
-			cdns_spi_flow(xspi, "irq transfer complete tx=%d rx=%d\n",
-				      xspi->tx_bytes, xspi->rx_bytes);
 			spi_finalize_current_transfer(ctlr);
 		}
 		status = IRQ_HANDLED;
@@ -564,8 +496,6 @@ static int cdns_prepare_message(struct spi_controller *ctlr,
 {
 	struct cdns_spi *xspi = spi_controller_get_devdata(ctlr);
 
-	cdns_spi_flow(xspi, "prepare_message cs=%u mode=0x%x\n",
-		      spi_get_chipselect(msg->spi, 0), msg->spi->mode);
 	if (!spi_controller_is_target(ctlr))
 		cdns_spi_config_clock_mode(msg->spi);
 	return 0;
@@ -590,11 +520,6 @@ static int cdns_transfer_one(struct spi_controller *ctlr,
 {
 	struct cdns_spi *xspi = spi_controller_get_devdata(ctlr);
 
-	cdns_spi_flow(xspi,
-		      "transfer_one enter cs=%u len=%u speed=%u bpw=%u txbuf=%u rxbuf=%u\n",
-		      spi_get_chipselect(spi, 0), transfer->len, transfer->speed_hz,
-		      transfer->bits_per_word, !!transfer->tx_buf, !!transfer->rx_buf);
-
 	xspi->txbuf = transfer->tx_buf;
 	xspi->rxbuf = transfer->rx_buf;
 	xspi->tx_bytes = transfer->len;
@@ -615,11 +540,8 @@ static int cdns_transfer_one(struct spi_controller *ctlr,
 	xspi->rx_bytes = DIV_ROUND_UP(xspi->rx_bytes, xspi->n_bytes);
 
 	cdns_spi_process_fifo(ctlr, xspi, xspi->tx_fifo_depth, 0);
-	cdns_spi_flow(xspi, "transfer_one primed depth=%u tx=%d rx=%d\n",
-		      xspi->tx_fifo_depth, xspi->tx_bytes, xspi->rx_bytes);
 
 	cdns_spi_write(xspi, CDNS_SPI_IER, CDNS_SPI_IXR_DEFAULT);
-	cdns_spi_flow(xspi, "transfer_one irq enabled\n");
 	return transfer->len;
 }
 
@@ -635,7 +557,6 @@ static int cdns_transfer_one(struct spi_controller *ctlr,
 static int cdns_prepare_transfer_hardware(struct spi_controller *ctlr)
 {
 	struct cdns_spi *xspi = spi_controller_get_devdata(ctlr);
-	cdns_spi_flow(xspi, "prepare_hardware\n");
 
 	cdns_spi_write(xspi, CDNS_SPI_ER, CDNS_SPI_ER_ENABLE);
 
@@ -658,8 +579,6 @@ static int cdns_unprepare_transfer_hardware(struct spi_controller *ctlr)
 	u32 ctrl_reg;
 	unsigned int cnt = xspi->tx_fifo_depth;
 
-	cdns_spi_flow(xspi, "unprepare_hardware enter\n");
-
 	if (spi_controller_is_target(ctlr)) {
 		while (cnt--)
 			cdns_spi_read(xspi, CDNS_SPI_RXD);
@@ -673,7 +592,6 @@ static int cdns_unprepare_transfer_hardware(struct spi_controller *ctlr)
 
 	/* Reset to default */
 	cdns_spi_write(xspi, CDNS_SPI_THLD, 0x1);
-	cdns_spi_flow(xspi, "unprepare_hardware exit cr=0x%08x\n", ctrl_reg);
 	return 0;
 }
 
@@ -696,29 +614,16 @@ static int cdns_spi_get_fifo_depth(struct device *dev,
 		/* The MSBs will get truncated giving us the size of the FIFO */
 		cdns_spi_write(xspi, CDNS_SPI_THLD, 0xffff);
 		xspi->tx_fifo_depth = cdns_spi_read(xspi, CDNS_SPI_THLD) + 1;
-		cdns_spi_flow(xspi, "detected fifo depth=%u\n",
-			      xspi->tx_fifo_depth);
 	} else {
 		if (!xspi->tx_fifo_depth)
 			return dev_err_probe(dev, -EINVAL,
 					     "fifo-depth must be greater than zero\n");
-
-		cdns_spi_flow(xspi, "configured fifo depth=%u\n",
-			      xspi->tx_fifo_depth);
 	}
 
 	/* Reset to default */
 	cdns_spi_write(xspi, CDNS_SPI_THLD, 0x1);
 
 	return 0;
-}
-
-static size_t cdns_spi_max_transfer_size(struct spi_device *spi)
-{
-	struct cdns_spi *xspi = spi_controller_get_devdata(spi->controller);
-
-	cdns_spi_flow(xspi, "max_transfer_size=%u\n", xspi->tx_fifo_depth);
-	return xspi->tx_fifo_depth;
 }
 
 /**
@@ -770,7 +675,6 @@ static int cdns_spi_probe(struct platform_device *pdev)
 	xspi = spi_controller_get_devdata(ctlr);
 	ctlr->dev.of_node = pdev->dev.of_node;
 	platform_set_drvdata(pdev, ctlr);
-	cdns_spi_flow(xspi, "probe enter target=%u\n", target);
 
 	xspi->regs = devm_platform_ioremap_resource(pdev, 0);
 	if (IS_ERR(xspi->regs)) {
@@ -847,7 +751,6 @@ static int cdns_spi_probe(struct platform_device *pdev)
 	ctlr->prepare_message = cdns_prepare_message;
 	ctlr->transfer_one = cdns_transfer_one;
 	ctlr->unprepare_transfer_hardware = cdns_unprepare_transfer_hardware;
-	ctlr->max_transfer_size = cdns_spi_max_transfer_size;
 	ctlr->mode_bits = SPI_CPOL | SPI_CPHA;
 	ctlr->bits_per_word_mask = SPI_BPW_MASK(8);
 	ctlr->flags = SPI_CONTROLLER_MUST_TX;
@@ -875,8 +778,6 @@ static int cdns_spi_probe(struct platform_device *pdev)
 
 	if (!spi_controller_is_target(ctlr))
 		pm_runtime_put_autosuspend(&pdev->dev);
-	cdns_spi_flow(xspi, "probe complete num_cs=%u clk_rate=%u fifo=%u\n",
-		      ctlr->num_chipselect, xspi->clk_rate, xspi->tx_fifo_depth);
 
 	return ret;
 
