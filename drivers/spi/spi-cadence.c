@@ -19,6 +19,7 @@
 #include <linux/of_address.h>
 #include <linux/platform_device.h>
 #include <linux/pm_runtime.h>
+#include <linux/property.h>
 #include <linux/reset.h>
 #include <linux/spi/spi.h>
 
@@ -39,7 +40,7 @@ static bool debug_flow = true;
 module_param(debug_flow, bool, 0644);
 MODULE_PARM_DESC(debug_flow, "Log numbered Cadence SPI control-flow events");
 
-static unsigned int debug_flow_limit = 1000;
+static unsigned int debug_flow_limit = 10000;
 module_param(debug_flow_limit, uint, 0644);
 MODULE_PARM_DESC(debug_flow_limit, "Maximum number of Cadence SPI control-flow events to log");
 
@@ -677,22 +678,39 @@ static int cdns_unprepare_transfer_hardware(struct spi_controller *ctlr)
 }
 
 /**
- * cdns_spi_detect_fifo_depth - Detect the FIFO depth of the hardware
+ * cdns_spi_get_fifo_depth - Get the FIFO depth of the hardware
+ * @dev:	Pointer to the device structure
  * @xspi:	Pointer to the cdns_spi structure
  *
  * The depth of the TX FIFO is a synthesis configuration parameter of the SPI
  * IP. The FIFO threshold register is sized so that its maximum value can be the
- * FIFO size - 1. This is used to detect the size of the FIFO.
+ * FIFO size - 1. This is used to detect the size of the FIFO when it is not
+ * specified by firmware.
+ *
+ * Return:	0 on success, negative error otherwise
  */
-static void cdns_spi_detect_fifo_depth(struct cdns_spi *xspi)
+static int cdns_spi_get_fifo_depth(struct device *dev,
+				   struct cdns_spi *xspi)
 {
-	/* The MSBs will get truncated giving us the size of the FIFO */
-	cdns_spi_write(xspi, CDNS_SPI_THLD, 0xffff);
-	xspi->tx_fifo_depth = cdns_spi_read(xspi, CDNS_SPI_THLD) + 1;
-	cdns_spi_flow(xspi, "detected fifo depth=%u\n", xspi->tx_fifo_depth);
+	if (device_property_read_u32(dev, "fifo-depth", &xspi->tx_fifo_depth)) {
+		/* The MSBs will get truncated giving us the size of the FIFO */
+		cdns_spi_write(xspi, CDNS_SPI_THLD, 0xffff);
+		xspi->tx_fifo_depth = cdns_spi_read(xspi, CDNS_SPI_THLD) + 1;
+		cdns_spi_flow(xspi, "detected fifo depth=%u\n",
+			      xspi->tx_fifo_depth);
+	} else {
+		if (!xspi->tx_fifo_depth)
+			return dev_err_probe(dev, -EINVAL,
+					     "fifo-depth must be greater than zero\n");
+
+		cdns_spi_flow(xspi, "configured fifo depth=%u\n",
+			      xspi->tx_fifo_depth);
+	}
 
 	/* Reset to default */
 	cdns_spi_write(xspi, CDNS_SPI_THLD, 0x1);
+
+	return 0;
 }
 
 static size_t cdns_spi_max_transfer_size(struct spi_device *spi)
@@ -803,7 +821,9 @@ static int cdns_spi_probe(struct platform_device *pdev)
 			xspi->is_decoded_cs = 0;
 	}
 
-	cdns_spi_detect_fifo_depth(xspi);
+	ret = cdns_spi_get_fifo_depth(&pdev->dev, xspi);
+	if (ret)
+		goto clk_dis_all;
 
 	/* SPI controller initializations */
 	cdns_spi_init_hw(xspi, spi_controller_is_target(ctlr));
