@@ -34,6 +34,7 @@
 #include <linux/mnt_idmapping.h>
 #include <linux/pidfs.h>
 #include <linux/nstree.h>
+#include <linux/ktime.h>
 
 #include "pnode.h"
 #include "internal.h"
@@ -3685,10 +3686,19 @@ static int do_new_mount(const struct path *path, const char *fstype,
 	struct file_system_type *type;
 	struct fs_context *fc;
 	const char *subtype = NULL;
+	ktime_t tmpfs_start;
+	bool trace_tmpfs;
 	int err = 0;
 
 	if (!fstype)
 		return -EINVAL;
+
+	trace_tmpfs = !strcmp(fstype, "tmpfs");
+	if (trace_tmpfs) {
+		tmpfs_start = ktime_get();
+		pr_notice("tmpfs mount: entering do_new_mount, source=%s\n",
+			  name ?: "none");
+	}
 
 	type = get_fs_type(fstype);
 	if (!type)
@@ -3724,8 +3734,15 @@ static int do_new_mount(const struct path *path, const char *fstype,
 		err = parse_monolithic_mount_data(fc, data);
 	if (!err && !mount_capable(fc))
 		err = -EPERM;
-	if (!err)
+	if (!err) {
+		if (trace_tmpfs)
+			pr_notice("tmpfs mount: entering do_new_mount_fc after %lld ms\n",
+				  ktime_ms_delta(ktime_get(), tmpfs_start));
 		err = do_new_mount_fc(fc, path, mnt_flags);
+	}
+	if (trace_tmpfs)
+		pr_notice("tmpfs mount: leaving do_new_mount after %lld ms, err=%d\n",
+			  ktime_ms_delta(ktime_get(), tmpfs_start), err);
 
 	put_fs_context(fc);
 	return err;
