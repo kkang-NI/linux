@@ -533,7 +533,7 @@
 		#size-cells = <0x0>;
 
 		emio-speed-gpios = <0>,
-						   <&gpio0 54 0>;
+				   <&gpio0 54 0>;
 
 		phy0: phy@0 {
 				compatible = "micrel,KSZ9031","ethernet-phy-ieee802.3-c22";
