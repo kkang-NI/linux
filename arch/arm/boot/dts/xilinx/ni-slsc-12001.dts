@@ -72,7 +72,7 @@
 		spiController1: spi@80001000 {
 			compatible = "xlnx,zynq-spi-r1p6";
 			status = "okay";
-			fifo-depth = <128>;
+			fifo-depth = <256>;
 			reg = <0x80001000 0x1000>;
 			interrupts = <0 31 4>;
 			clock-names = "ref_clk", "pclk";
@@ -110,7 +110,7 @@
 		spiController2: spi@80002000 {
 			compatible = "xlnx,zynq-spi-r1p6";
 			status = "okay";
-			fifo-depth = <128>;
+			fifo-depth = <256>;
 			reg = <0x80002000 0x1000>;
 			interrupts = <0 32 4>;
 			clock-names = "ref_clk", "pclk";
@@ -147,7 +147,7 @@
 		spiController3: spi@80003000 {
 			compatible = "xlnx,zynq-spi-r1p6";
 			status = "okay";
-			fifo-depth = <128>;
+			fifo-depth = <256>;
 			reg = <0x80003000 0x1000>;
 			interrupts = <0 33 4>;
 			clock-names = "ref_clk", "pclk";
@@ -184,7 +184,7 @@
 		spiController4: spi@80004000 {
 			compatible = "xlnx,zynq-spi-r1p6";
 			status = "okay";
-			fifo-depth = <128>;
+			fifo-depth = <256>;
 			reg = <0x80004000 0x1000>;
 			interrupts = <0 34 4>;
 			clock-names = "ref_clk", "pclk";
@@ -221,7 +221,7 @@
 		spiController5: spi@80005000 {
 			compatible = "xlnx,zynq-spi-r1p6";
 			status = "okay";
-			fifo-depth = <128>;
+			fifo-depth = <256>;
 			reg = <0x80005000 0x1000>;
 			interrupts = <0 35 4>;
 			clock-names = "ref_clk", "pclk";
@@ -257,7 +257,7 @@
 		spiController6: spi@80006000 {
 			compatible = "xlnx,zynq-spi-r1p6";
 			status = "okay";
-			fifo-depth = <128>;
+			fifo-depth = <256>;
 			reg = <0x80006000 0x1000>;
 			interrupts = <0 36 4>;
 			clock-names = "ref_clk", "pclk";
@@ -293,7 +293,7 @@
 		spiController7: spi@80007000 {
 			compatible = "xlnx,zynq-spi-r1p6";
 			status = "okay";
-			fifo-depth = <128>;
+			fifo-depth = <256>;
 			reg = <0x80007000 0x1000>;
 			interrupts = <0 52 4>;
 			clock-names = "ref_clk", "pclk";
@@ -329,7 +329,7 @@
 		spiController8: spi@80008000 {
 			compatible = "xlnx,zynq-spi-r1p6";
 			status = "okay";
-			fifo-depth = <128>;
+			fifo-depth = <256>;
 			reg = <0x80008000 0x1000>;
 			interrupts = <0 53 4>;
 			clock-names = "ref_clk", "pclk";
@@ -365,7 +365,7 @@
 		spiController9: spi@80009000 {
 			compatible = "xlnx,zynq-spi-r1p6";
 			status = "okay";
-			fifo-depth = <128>;
+			fifo-depth = <256>;
 			reg = <0x80009000 0x1000>;
 			interrupts = <0 54 4>;
 			clock-names = "ref_clk", "pclk";
@@ -401,7 +401,7 @@
 		spiController10: spi@8000a000 {
 			compatible = "xlnx,zynq-spi-r1p6";
 			status = "okay";
-			fifo-depth = <128>;
+			fifo-depth = <256>;
 			reg = <0x8000A000 0x1000>;
 			interrupts = <0 55 4>;
 			clock-names = "ref_clk", "pclk";
@@ -438,7 +438,7 @@
 		spiController11: spi@8000b000 {
 			compatible = "xlnx,zynq-spi-r1p6";
 			status = "okay";
-			fifo-depth = <128>;
+			fifo-depth = <256>;
 			reg = <0x8000B000 0x1000>;
 			interrupts = <0 56 4>;
 			clock-names = "ref_clk", "pclk";
@@ -475,7 +475,7 @@
 		spiController12: spi@8000c000 {
 			compatible = "xlnx,zynq-spi-r1p6";
 			status = "okay";
-			fifo-depth = <128>;
+			fifo-depth = <256>;
 			reg = <0x8000C000 0x1000>;
 			interrupts = <0 57 4>;
 			clock-names = "ref_clk", "pclk";
