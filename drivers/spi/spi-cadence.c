@@ -18,7 +18,6 @@
 #include <linux/of_address.h>
 #include <linux/platform_device.h>
 #include <linux/pm_runtime.h>
-#include <linux/property.h>
 #include <linux/reset.h>
 #include <linux/spi/spi.h>
 
@@ -494,8 +493,6 @@ static irqreturn_t cdns_spi_irq(int irq, void *dev_id)
 static int cdns_prepare_message(struct spi_controller *ctlr,
 				struct spi_message *msg)
 {
-	struct cdns_spi *xspi = spi_controller_get_devdata(ctlr);
-
 	if (!spi_controller_is_target(ctlr))
 		cdns_spi_config_clock_mode(msg->spi);
 	return 0;
@@ -596,34 +593,21 @@ static int cdns_unprepare_transfer_hardware(struct spi_controller *ctlr)
 }
 
 /**
- * cdns_spi_get_fifo_depth - Get the FIFO depth of the hardware
- * @dev:	Pointer to the device structure
+ * cdns_spi_detect_fifo_depth - Detect the FIFO depth of the hardware
  * @xspi:	Pointer to the cdns_spi structure
  *
  * The depth of the TX FIFO is a synthesis configuration parameter of the SPI
  * IP. The FIFO threshold register is sized so that its maximum value can be the
- * FIFO size - 1. This is used to detect the size of the FIFO when it is not
- * specified by firmware.
- *
- * Return:	0 on success, negative error otherwise
+ * FIFO size - 1. This is used to detect the size of the FIFO.
  */
-static int cdns_spi_get_fifo_depth(struct device *dev,
-				   struct cdns_spi *xspi)
+static void cdns_spi_detect_fifo_depth(struct cdns_spi *xspi)
 {
-	if (device_property_read_u32(dev, "fifo-depth", &xspi->tx_fifo_depth)) {
-		/* The MSBs will get truncated giving us the size of the FIFO */
-		cdns_spi_write(xspi, CDNS_SPI_THLD, 0xffff);
-		xspi->tx_fifo_depth = cdns_spi_read(xspi, CDNS_SPI_THLD) + 1;
-	} else {
-		if (!xspi->tx_fifo_depth)
-			return dev_err_probe(dev, -EINVAL,
-					     "fifo-depth must be greater than zero\n");
-	}
+	/* The MSBs will get truncated giving us the size of the FIFO */
+	cdns_spi_write(xspi, CDNS_SPI_THLD, 0xffff);
+	xspi->tx_fifo_depth = cdns_spi_read(xspi, CDNS_SPI_THLD) + 1;
 
 	/* Reset to default */
 	cdns_spi_write(xspi, CDNS_SPI_THLD, 0x1);
-
-	return 0;
 }
 
 /**
@@ -725,9 +709,7 @@ static int cdns_spi_probe(struct platform_device *pdev)
 			xspi->is_decoded_cs = 0;
 	}
 
-	ret = cdns_spi_get_fifo_depth(&pdev->dev, xspi);
-	if (ret)
-		goto clk_dis_all;
+	cdns_spi_detect_fifo_depth(xspi);
 
 	/* SPI controller initializations */
 	cdns_spi_init_hw(xspi, spi_controller_is_target(ctlr));
